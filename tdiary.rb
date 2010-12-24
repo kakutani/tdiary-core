@@ -466,9 +466,11 @@ module TDiary
 	class Config
 		def initialize( cgi, request = nil )
 			@cgi, @request = cgi, request
+
 			configure_attrs
-			configure_bot_pattern
 			setup_attr_accessor_to_all_ivars
+
+			configure_bot_pattern # query method only
 		end
 
 		# saving to tdiary.conf in @data_path
