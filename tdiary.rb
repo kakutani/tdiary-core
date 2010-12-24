@@ -1081,8 +1081,8 @@ module TDiary
 		attr_reader :date
 		attr_reader :diaries
 
-		def initialize( cgi, rhtml, conf )
-			@cgi, @rhtml, @conf = cgi, rhtml, conf
+		def initialize( cgi, rhtml, conf, request = nil )
+			@cgi, @rhtml, @conf, @request = cgi, rhtml, conf, request
 			@diaries = {}
 			@cookies = []
 
@@ -1345,7 +1345,7 @@ module TDiary
 			false
 		end
 
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 			csrf_check( cgi, conf )
 		end
@@ -1433,7 +1433,7 @@ EOS
 	#  base class of administration
 	#
 	class TDiaryAdmin < TDiaryAuthorOnlyBase
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 			begin
 				@date = Time::local( @cgi.params['year'][0].to_i, @cgi.params['month'][0].to_i, @cgi.params['day'][0].to_i )
@@ -1450,7 +1450,7 @@ EOS
 	class TDiaryForm < TDiaryAdmin
 		def csrf_protection_get_is_okay; true; end
 
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			begin
 				super
 			rescue TDiaryError
@@ -1476,7 +1476,7 @@ EOS
 	class TDiaryEdit < TDiaryAdmin
 		def csrf_protection_get_is_okay; true; end
 
-		def initialize( cgi, rhtm, conf )
+		def initialize( cgi, rhtm, conf, request = nil )
 			super
 
 			@io.transaction( @date ) do |diaries|
@@ -1497,7 +1497,7 @@ EOS
 	#  preview diary
 	#
 	class TDiaryPreview < TDiaryAdmin
-		def initialize( cgi, rhtm, conf )
+		def initialize( cgi, rhtm, conf, request = nil )
 			super
 
 			@title = @conf.to_native( @cgi.params['title'][0] )
@@ -1533,7 +1533,7 @@ EOS
 	#  super class of diary saving classes
 	#
 	class TDiaryUpdate < TDiaryAdmin
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			@title = conf.to_native( cgi.params['title'][0] )
 			@body = conf.to_native( cgi.params['body'][0] )
 			@hide = cgi.params['hide'][0] == 'true' ? true : false
@@ -1555,7 +1555,7 @@ EOS
 	#  append diary
 	#
 	class TDiaryAppend < TDiaryUpdate
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			begin
 				super
 			rescue TDiaryError
@@ -1584,7 +1584,7 @@ EOS
 	#  replace diary
 	#
 	class TDiaryReplace < TDiaryUpdate
-		def initialize( cgi, rhtm, conf )
+		def initialize( cgi, rhtm, conf, request = nil )
 			super
 			old_date = @cgi.params['old'][0]
 
@@ -1613,7 +1613,7 @@ EOS
 	#  change visible mode of comments
 	#
 	class TDiaryShowComment < TDiaryAdmin
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 
 			@io.transaction( @date ) do |diaries|
@@ -1645,7 +1645,7 @@ EOS
 	#  show edit diary form after calling form plugin.
 	#
 	class TDiaryFormPlugin < TDiaryAuthorOnlyBase
-		def initialize( cgi, rhtm, conf )
+		def initialize( cgi, rhtm, conf, request = nil )
 			super
 
 			if @cgi.valid?( 'date' ) then
@@ -1680,7 +1680,7 @@ EOS
 	class TDiaryConf < TDiaryAuthorOnlyBase
 		def csrf_protection_get_is_okay; true; end
 
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 			@key = @cgi.params['conf'][0] || ''
 		end
@@ -1693,7 +1693,7 @@ EOS
 	class TDiarySaveConf < TDiaryConf
 		def csrf_protection_get_is_okay; false; end
 
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 		end
 
@@ -1716,7 +1716,7 @@ EOS
 	#  base of view mode classes
 	#
 	class TDiaryView < TDiaryBase
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 			unless referer_filter( @cgi.referer )
 				def @cgi.referer; nil; end
@@ -1797,7 +1797,7 @@ EOS
 	#  show day mode view
 	#
 	class TDiaryDay < TDiaryView
-		def initialize( cgi, rhtm, conf )
+		def initialize( cgi, rhtm, conf, request = nil )
 			super
 			begin
 				# time is noon for easy to calc leap second.
@@ -1853,7 +1853,7 @@ EOS
 	#  save a comment
 	#
 	class TDiaryComment < TDiaryDay
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 		end
 
@@ -1914,7 +1914,7 @@ EOS
 	#  show month mode view
 	#
 	class TDiaryMonth < TDiaryMonthBase
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 
 			begin
@@ -1945,7 +1945,7 @@ EOS
 	#  show nyear mode view
 	#
 	class TDiaryNYear < TDiaryMonthBase
-		def initialize(cgi, rhtml, conf)
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 
 			@diaries = {}
@@ -1983,7 +1983,7 @@ EOS
 	#  show latest mode view
 	#
 	class TDiaryLatest < TDiaryView
-		def initialize( cgi, rhtml, conf )
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 			if @cgi.params['date'][0] then
 				ym = [@cgi.params['date'][0][0,4].to_i, @cgi.params['date'][0][4,2].to_i]
@@ -2140,7 +2140,7 @@ EOS
 	#
 	class TDiaryCategoryView < TDiaryBase
 		attr_reader :last_modified
-		def initialize(cgi, rhtml, conf)
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 			@last_modified = Time.now
 		end
@@ -2152,7 +2152,7 @@ EOS
 	#
 	class TDiarySearch < TDiaryBase
 		attr_reader :last_modified
-		def initialize(cgi, rhtml, conf)
+		def initialize( cgi, rhtml, conf, request = nil )
 			super
 			@last_modified = Time.now
 		end
