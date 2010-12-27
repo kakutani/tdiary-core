@@ -1184,7 +1184,8 @@ module TDiary
 				'date' => @date,
 				'comment' => @comment,
 				'last_modified' => last_modified,
-				'logger' => @logger
+				'logger' => @logger,
+				'request' => @request
 			)
 		end
 
